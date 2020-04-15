@@ -56,7 +56,7 @@ def main():
     LOG.info("vcn: %s", vcn.id)
 
     # Internet gateway
-    igs = [ig for ig in load_all(vcn_client.list_internet_gateways, compartment.id, vcn.id) if ig.display_name == args.internet_gateway_name]
+    igs = [ig for ig in load_all(vcn_client.list_internet_gateways, compartment.id, vcn.id)]
     if len(igs) == 0:
         LOG.info("creating internet gateway")
         ig = vcn_client.create_internet_gateway(oci.core.models.CreateInternetGatewayDetails(
