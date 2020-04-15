@@ -1,3 +1,4 @@
+import argcomplete
 import argparse
 import json
 import logging
@@ -23,6 +24,7 @@ def main():
 
     parser.add_argument("--subnet-name", default="sub")
     parser.add_argument("--subnet-cidr", default="10.0.0.0/24")
+    argcomplete.autocomplete(parser)
     args = parser.parse_args()
 
     conf = oci.config.from_file(os.path.expanduser(args.config), profile_name=args.profile)
