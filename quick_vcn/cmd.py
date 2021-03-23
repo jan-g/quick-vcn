@@ -15,6 +15,8 @@ def main():
     parser.add_argument("--config", default="~/.oci/config")
     parser.add_argument("--profile", default=os.getenv("OCI_CLI_PROFILE", default="DEFAULT"))
     parser.add_argument("--region")
+    parser.add_argument("--tenancy")
+
     parser.add_argument("--compartment", required=True)
 
     parser.add_argument("--vcn-name", default="net")
@@ -31,10 +33,14 @@ def main():
     if args.region is not None:
         conf["region"] = args.region
 
+    tenancy = args.tenancy
+    if tenancy is None:
+        tenancy = conf["tenancy"]
+
     iam_client = oci.identity.IdentityClient(conf)
     vcn_client = oci.core.VirtualNetworkClient(conf)
 
-    compartments = load_all(iam_client.list_compartments, conf["tenancy"], compartment_id_in_subtree=True)
+    compartments = load_all(iam_client.list_compartments, tenancy, compartment_id_in_subtree=True)
     compartment = [c for c in compartments if c.name == args.compartment][0]
 
     LOG.info("compartment: %s", compartment.id)
@@ -56,7 +62,7 @@ def main():
     LOG.info("vcn: %s", vcn.id)
 
     # Internet gateway
-    igs = [ig for ig in load_all(vcn_client.list_internet_gateways, compartment.id, vcn.id)]
+    igs = [ig for ig in load_all(vcn_client.list_internet_gateways, compartment.id, vcn_id=vcn.id)]
     if len(igs) == 0:
         LOG.info("creating internet gateway")
         ig = vcn_client.create_internet_gateway(oci.core.models.CreateInternetGatewayDetails(
@@ -95,7 +101,7 @@ def main():
 
     # Subnet
     sns = [sn
-           for sn in load_all(vcn_client.list_subnets, compartment.id, vcn.id)
+           for sn in load_all(vcn_client.list_subnets, compartment.id, vcn_id=vcn.id)
            if sn.display_name == args.subnet_name or sn.cidr_block == args.subnet_cidr]
     if len(sns) == 0:
         LOG.info("creating subnet")
